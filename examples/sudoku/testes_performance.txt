@@ -1,0 +1,14 @@
+experimentei mudar os generators no assign e eliminate para list comprehensions
+  => mesmos resultados
+
+experimentei converter todo o código que usava let/ec para equivalente sem ECs
+  => ficou ligeiramente pior
+
+acrescentei um contains às strings
+  => melhorou de 874 ms para 515 ms
+
+melhorei os fors
+  => melhorou de 515 ms para 437 ms
+
+optmizei as hash-tables
+  => melhorou de 437 ms para 203 ms

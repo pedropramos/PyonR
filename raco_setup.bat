@@ -1,0 +1,2 @@
+raco setup
+pause

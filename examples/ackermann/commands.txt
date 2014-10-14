@@ -1,0 +1,9 @@
+python ackermann.py
+
+racket ackermann.rkt
+
+(time
+   (py-print
+    (py-call python:ackermann
+             (py-integer 3)
+             (py-integer 9))))

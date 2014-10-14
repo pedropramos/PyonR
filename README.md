@@ -40,5 +40,4 @@ PyonR currently supports most of the Python language as specified by version 2.7
 
 You can import Racket libraries using a modified syntax for Python's import statements, simply by specifying the library's module path withing string quotes. 
 
-
-Examples in the examples folder
+(To Be Continued)

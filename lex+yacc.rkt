@@ -270,19 +270,29 @@
               (lambda (ip)
                 (let loop ((num 0)
                            (count 0))
-                  (let ((char (peek-string 1 num ip)))
+                  (let ((char (peek-char-or-special ip num)))
                     (cond
                       ((eof-object? char)
                        (read-string num ip)
                        0)
-                      ((string=? char "\t")
+                      ((eq? char #\tab)
                        (loop (add1 num) (+ count 8 (- (modulo count 8)))))
-                      ((string=? char " ")
+                      ((eq? char #\space)
                        (loop (add1 num) (add1 count)))
                       (else
                        (read-string num ip)
                        count))))))
 
+;             ;; Skips the rest of the line
+;             ;; skip-line: input-port -> void
+;             [skip-line
+;              (lambda (port)
+;                (let loop ([char (read-char-or-special port)])
+;                  (unless (or (eof-object? char)
+;                              (eq? char #\newline))
+;                    (loop (read-char-or-special port)))))]
+             
+             
              ;; The actual lexer
              ;; lex-token: input-port -> token
              (lex-token
@@ -354,6 +364,9 @@
                ("}" (CBRACE))
                ((:or misc-operator #\\)
                 (string->symbol lexeme))
+               
+               ;; ignore special objects such as images
+               [(special) (return-without-pos (lex-token input-port))]
 
                ((eof)
                 (cond

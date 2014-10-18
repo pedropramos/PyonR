@@ -55,47 +55,55 @@
       
   
   
+  (define-for-syntax python-not-found-msg
+    "The cpyimport statement is disabled, because PyonR could not find Python 2.7 installed on your system.")
   
   (define-syntax (cpy-import stx)
-    (syntax-case stx (as)
-      [(_ module-name as id)
-       (begin
-         (Py_Initialize)
-         #'(define id (module-from-cpy
-                       (PyImport_Import
-                        (PyString_FromString module-name)))))]))
+    (if (not path-to-cpython-lib)
+        (raise-syntax-error 'python-not-found python-not-found-msg)
+        (syntax-case stx (as)
+          [(_ module-name as id)
+           (begin
+             (Py_Initialize)
+             #'(define id (module-from-cpy
+                           (PyImport_Import
+                            (PyString_FromString module-name)))))])))
   
   (define-syntax (cpy-from stx)
-    (syntax-case stx (import as)
-      [(_ module-name import ((orig-name as bind-id) ...))
-       (begin
-         (Py_Initialize)
-         #'(begin
-             (define bind-id 'undefined)
-             ...
-             (let ([cpy-module (PyImport_Import
-                                (PyString_FromString module-name))])
-               (set! bind-id (cpy->racket
-                              (PyObject_GetAttrString cpy-module orig-name)))
-               ...)))]))
+    (if (not path-to-cpython-lib)
+        (raise-syntax-error 'python-not-found python-not-found-msg)
+        (syntax-case stx (import as)
+          [(_ module-name import ((orig-name as bind-id) ...))
+           (begin
+             (Py_Initialize)
+             #'(begin
+                 (define bind-id 'undefined)
+                 ...
+                 (let ([cpy-module (PyImport_Import
+                                    (PyString_FromString module-name))])
+                   (set! bind-id (cpy->racket
+                                  (PyObject_GetAttrString cpy-module orig-name)))
+                   ...)))])))
   
   
   (require (for-syntax (only-in "name-mangling.rkt" string->colon-symbol)))
   (define-syntax (cpy-from-import-* stx)
-    (syntax-case stx ()
-      [(_ module-name)
-       (begin
-         (Py_Initialize)
-         (let* ([bindings-names (cpy-module-exports (syntax->datum #'module-name))]
-                [bindings (map string->colon-symbol bindings-names)])
-           #`(begin
-               (define cpy-module (PyImport_Import (PyString_FromString module-name)))
-               #,@(for/list ([binding/str bindings-names]
-                             [binding/sym bindings])
-                    (with-syntax ([id (datum->syntax stx binding/sym)]
-                                  [id-name (datum->syntax stx binding/str)])
-                      #'(define id (cpy->racket
-                                    (PyObject_GetAttrString cpy-module id-name))))))))]))
+    (if (not path-to-cpython-lib)
+        (raise-syntax-error 'python-not-found python-not-found-msg)
+        (syntax-case stx ()
+          [(_ module-name)
+           (begin
+             (Py_Initialize)
+             (let* ([bindings-names (cpy-module-exports (syntax->datum #'module-name))]
+                    [bindings (map string->colon-symbol bindings-names)])
+               #`(begin
+                   (define cpy-module (PyImport_Import (PyString_FromString module-name)))
+                   #,@(for/list ([binding/str bindings-names]
+                                 [binding/sym bindings])
+                        (with-syntax ([id (datum->syntax stx binding/sym)]
+                                      [id-name (datum->syntax stx binding/str)])
+                          #'(define id (cpy->racket
+                                        (PyObject_GetAttrString cpy-module id-name))))))))])))
   
   (require (for-syntax "libpython.rkt"))
   (define-for-syntax (cpy-module-exports module-name)

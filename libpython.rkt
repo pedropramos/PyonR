@@ -15,15 +15,13 @@
       [(windows)
        (let ([paths (list "C:/Windows/SysWOW64/python27.dll"
                           "C:/Windows/System32/python27.dll")])
-         (or (for/or ([path paths])
-               (and (file-exists? path) path))
-             (error "cannot find \"python27.dll\"")))]
+         (for/or ([path paths])
+           (and (file-exists? path) path)))]
       [(unix)
        (let ([paths (list "/usr/lib/libpython2.7.so"
                           "/usr/lib/python2.7/config/libpython2.7.so")])
-         (or (for/or ([path paths])
-               (and (file-exists? path) path))
-             (error "cannot find \"libpython2.7.so\"")))]))
+         (for/or ([path paths])
+           (and (file-exists? path) path)))]))
   
   (define path-to-others-lib
     (let ([file-name (case (system-type 'os)
@@ -31,9 +29,12 @@
                        [(unix) "others.so"])])
       (collection-file-path (build-path "c" file-name) "python")))
     
-  (define-ffi-definer define-function (ffi-lib path-to-cpython-lib))
-  (define-ffi-definer define-others (ffi-lib path-to-others-lib))
-  (define-ffi-definer define-c-lang (ffi-lib #f))
+  (define-ffi-definer define-function (ffi-lib path-to-cpython-lib)
+    #:default-make-fail void)
+  (define-ffi-definer define-others (ffi-lib path-to-others-lib)
+    #:default-make-fail void)
+  (define-ffi-definer define-c-lang (ffi-lib #f)
+    #:default-make-fail void)
   
   
   (define-for-syntax (underscore stx)

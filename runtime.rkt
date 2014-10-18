@@ -606,7 +606,8 @@
   (define-for-syntax (module-name->module-path/compile-time name)
     (let* ([path-to-PATH (collection-file-path (build-path "lib" "PATH") "python")]
            [file (open-input-file path-to-PATH)])
-      (let loop ([dirs (map string-trim (port->list read-line file))])
+      (let loop ([dirs (append (list "." (path->string (collection-file-path (build-path "lib") "python")))
+                               (map string-trim (port->list read-line file)))])
         (if (empty? dirs)
           (raise-syntax-error 'ImportError (format "No module named ~a" name))
           (let* ([dir (first dirs)]

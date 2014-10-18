@@ -24,10 +24,11 @@
            (and (file-exists? path) path)))]))
   
   (define path-to-others-lib
-    (let ([file-name (case (system-type 'os)
-                       [(windows) "others.dll"]
-                       [(unix) "others.so"])])
-      (collection-file-path (build-path "c" file-name) "python")))
+    (and path-to-spython-lib
+         (let ([file-name (case (system-type 'os)
+                            [(windows) "others.dll"]
+                            [(unix) "others.so"])])
+           (collection-file-path (build-path "c" file-name) "python"))))
     
   (define-ffi-definer define-function (ffi-lib path-to-cpython-lib)
     #:default-make-fail void)

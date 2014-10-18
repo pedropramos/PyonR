@@ -24,7 +24,7 @@
            (and (file-exists? path) path)))]))
   
   (define path-to-others-lib
-    (and path-to-spython-lib
+    (and path-to-cpython-lib
          (let ([file-name (case (system-type 'os)
                             [(windows) "others.dll"]
                             [(unix) "others.so"])])

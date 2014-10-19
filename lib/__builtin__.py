@@ -87,10 +87,17 @@
 (define (py-isinstance? object classinfo)
   (not (not (is-subtype? (type object) classinfo))))
 
-(define (py-map fun iterable)
-  (vector->py-list
-   (for/vector ([obj (->sequence iterable)])
-     (fun obj))))
+(define (py-map fun . iterables)
+  (let* ([tuples-len (length iterables)] 
+         [its (map iter iterables)]
+         [nexts (map (lambda (it) (mro-lookup it 'next)) its)]
+         [result (make-py-list)])
+    (with-handlers ([stop-iteration-predicate (const result)])
+      (let loop ()
+        (py-list-append! result
+                         (apply fun (for/list ([it its] [next nexts])
+                                      (next it))))
+        (loop)))))
 
 (define (py-chr i)
   (string (integer->char i)))

@@ -95,14 +95,21 @@
   (define (py-list-len pl)
     (list_obj-filled pl))
   
-  (define (py-list-getitem pl index)
-    (if (< index (list_obj-filled pl))
-        (vector-ref (list_obj-vector pl) index)
+    (define (py-list-getitem pl index)
+    (if (< (abs index) (list_obj-filled pl))
+        (vector-ref (list_obj-vector pl)
+                    (if (< index 0)
+                        (+ (list_obj-filled pl) index)
+                        index))
         (exn-raise py-IndexError "list index out of range")))
   
   (define (py-list-setitem! pl index item)
-    (if (< index (list_obj-filled pl))
-        (vector-set! (list_obj-vector pl) index item)
+    (if (< (abs index) (list_obj-filled pl))
+        (vector-set! (list_obj-vector pl) 
+                     (if (< index 0)
+                        (+ (list_obj-filled pl) index)
+                        index)
+                     item)
         (exn-raise py-IndexError "list assignment index out of range")))
   
   (define (py-list-append! pl item)
@@ -127,12 +134,14 @@
              
   
   (define (py-list-getslice pl low high)
-    (let* ([pl-len (list_obj-filled pl)]
-           [low (max low 0)]
-           [high (max (inexact->exact (min high pl-len)) low)])
-      (vector->py-list
-       (vector-copy
-        (py-list->vector pl) low high))))
+    (let ((low (if (< low 0) (+ (list_obj-filled pl) low) low))
+          (high (if (< high 0) (+ (list_obj-filled pl) high) high)))
+      (let* ([pl-len (list_obj-filled pl)]
+             [low (max low 0)]
+             [high (max (inexact->exact (min high pl-len)) low)])
+        (vector->py-list
+         (vector-copy
+          (py-list->vector pl) low high))))) 
     
   
   

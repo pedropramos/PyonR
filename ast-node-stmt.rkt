@@ -1110,7 +1110,11 @@
               
               [body+bindings-so (if (not (empty? bindings))
                                     `(let ,bindings ,body-so)
-                                    body-so)])
+                                    body-so)]
+              
+              [body+bindings-so (if (send body yields?)
+                                    `(make-py-generator (generator () ,body+bindings-so))
+                                    body+bindings-so)])
                              
            (->orig-so `(define-py-function ,(send name to-racket) with-params ,(send parms get-names)
                          (lambda ,(send parms to-racket) ,body+bindings-so)))))

@@ -110,8 +110,10 @@
                                               (vector->list args)))))
   
   
-  
-  
+  ;;;;;;;;;;;;;;;;;;;;;
+   
+   
+   
   (define (binary-op-method-call x method-name reversed-name y)
     (let ([candidate-result (py-method-call x method-name y)])
       (if (eq? candidate-result py-NotImplemented)
@@ -125,39 +127,47 @@
           (binary-op-method-call x method-name y))))
   
   
-  (define (prefix-r name)
+  
+  
+  (define-for-syntax (prefix-r name)
     (let ([name/str (symbol->string name)])
       (string->symbol
        (string-append (substring name/str 0 2) "r" (substring name/str 2)))))
   
-  (define (prefix-i name)
+  (define-for-syntax (prefix-i name)
     (let ([name/str (symbol->string name)])
       (string->symbol
        (string-append (substring name/str 0 2) "i" (substring name/str 2)))))
-          
+     
   
-  (define (binary-op method-name)
-    (let ([reversed-name (prefix-r method-name)])
-      (lambda (x y)
-        (binary-op-method-call x method-name reversed-name y))))
   
-  (define (binary-op/numbers method-name
-                             #:num num-dispatch-op)
-    (let ([reversed-name (prefix-r method-name)])
-      (lambda (x y)
-        (cond
-          [(and (number? x) (number? y)) (num-dispatch-op x y)]
-          [else (binary-op-method-call x method-name reversed-name y)]))))
   
-  (define (binary-op/numbers+strings method-name
-                                     #:num num-dispatch-op
-                                     #:str str-dispatch-op)
-    (let ([reversed-name (prefix-r method-name)])
-      (lambda (x y)
-        (cond
-          [(and (number? x) (number? y)) (num-dispatch-op x y)]
-          [(and (string? x) (string? y)) (str-dispatch-op x y)]
-          [else (binary-op-method-call x method-name reversed-name y)]))))
+  (define-syntax (binary-op stx)
+    (syntax-case stx ()
+      [(_ method-name)
+       (with-syntax ([reversed-name (datum->syntax stx (prefix-r (syntax->datum #'method-name)))])
+         #'(lambda (x y)
+             (binary-op-method-call x (quote method-name) (quote reversed-name) y)))]))
+  
+  (define-syntax (binary-op/numbers stx)
+    (syntax-case stx ()
+      [(_ method-name #:num num-dispatch-op)
+       (with-syntax ([reversed-name (datum->syntax stx (prefix-r (syntax->datum #'method-name)))])
+         #'(lambda (x y)
+             (cond
+               [(and (number? x) (number? y)) (num-dispatch-op x y)]
+               [else (binary-op-method-call x (quote method-name) (quote reversed-name) y)])))]))
+  
+  (define-syntax (binary-op/numbers+strings stx)
+    (syntax-case stx ()
+      [(_ method-name #:num num-dispatch-op
+                      #:str str-dispatch-op)
+       (with-syntax ([reversed-name (datum->syntax stx (prefix-r (syntax->datum #'method-name)))])
+         #'(lambda (x y)
+             (cond
+               [(and (number? x) (number? y)) (num-dispatch-op x y)]
+               [(and (string? x) (string? y)) (str-dispatch-op x y)]
+               [else (binary-op-method-call x (quote method-name) (quote reversed-name) y)])))]))
   
   
   
@@ -170,66 +180,80 @@
   (define (py-shift-right n b)
     (arithmetic-shift n (- b)))
   
-  (define py-add (binary-op/numbers+strings '__add__ #:num + #:str string-append))
-  (define py-sub (binary-op/numbers '__sub__ #:num -))
-  (define py-mul (binary-op/numbers '__mul__ #:num *))
-  (define py-div (binary-op/numbers '__div__ #:num number-division))
-  (define py-floordiv (binary-op/numbers '__floordiv__ #:num (compose floor /)))
-  (define py-mod (binary-op/numbers '__mod__ #:num py-number-modulo))
-  (define py-pow (binary-op/numbers '__pow__ #:num expt))                             ;; /!\ optional argument: modulo
-  (define py-lshift (binary-op/numbers '__lshift__ #:num py-shift-left))
-  (define py-rshift (binary-op/numbers '__rshift__ #:num py-shift-right))
-  (define py-bwand (binary-op/numbers '__and__ #:num bitwise-and))
-  (define py-bwor (binary-op/numbers '__or__ #:num bitwise-ior))
-  (define py-bwxor (binary-op/numbers '__xor__ #:num bitwise-xor))
+  (define py-add (binary-op/numbers+strings __add__ #:num + #:str string-append))
+  (define py-sub (binary-op/numbers __sub__ #:num -))
+  (define py-mul (binary-op/numbers __mul__ #:num *))
+  (define py-div (binary-op/numbers __div__ #:num number-division))
+  (define py-floordiv (binary-op/numbers __floordiv__ #:num (compose floor /)))
+  (define py-mod (binary-op/numbers __mod__ #:num py-number-modulo))
+  (define py-pow (binary-op/numbers __pow__ #:num expt))                             ;; /!\ optional argument: modulo
+  (define py-lshift (binary-op/numbers __lshift__ #:num py-shift-left))
+  (define py-rshift (binary-op/numbers __rshift__ #:num py-shift-right))
+  (define py-bwand (binary-op/numbers __and__ #:num bitwise-and))
+  (define py-bwor (binary-op/numbers __or__ #:num bitwise-ior))
+  (define py-bwxor (binary-op/numbers __xor__ #:num bitwise-xor))
   
-  ;;;;;;;;;;;;;;;;
+  ;;;;;;;;;;;;;;;
   
-  (define (augmented-op method-name)
-    (let ([incremented-name (prefix-i method-name)])
-      (lambda (x y)
-        (augmented-op-method-call x method-name incremented-name y))))
+  (define-syntax (augmented-op stx)
+    (syntax-case stx ()
+      [(_ method-name)
+       (with-syntax ([incremented-name (datum->syntax stx (prefix-i (syntax->datum #'method-name)))])
+         #'(lambda (x y)
+             (augmented-op-method-call x (quote method-name) (quote incremented-name) y)))]))
   
-  (define (augmented-op/numbers method-name
-                             #:num num-dispatch-op)
-    (let ([incremented-name (prefix-i method-name)])
-      (lambda (x y)
-        (cond
-          [(and (number? x) (number? y)) (num-dispatch-op x y)]
-          [else (augmented-op-method-call x method-name incremented-name y)]))))
+  (define-syntax (augmented-op/numbers stx)
+    (syntax-case stx ()
+      [(_ method-name #:num num-dispatch-op)
+       (with-syntax ([incremented-name (datum->syntax stx (prefix-i (syntax->datum #'method-name)))])
+         #'(lambda (x y)
+             (cond
+               [(and (number? x) (number? y)) (num-dispatch-op x y)]
+               [else (augmented-op-method-call x (quote method-name) (quote incremented-name) y)])))]))
   
-  (define (augmented-op/numbers+strings method-name
-                                     #:num num-dispatch-op
-                                     #:str str-dispatch-op)
-    (let ([incremented-name (prefix-i method-name)])
-      (lambda (x y)
-        (cond
-          [(and (number? x) (number? y)) (num-dispatch-op x y)]
-          [(and (string? x) (string? y)) (str-dispatch-op x y)]
-          [else (augmented-op-method-call x method-name incremented-name y)]))))
-  
-  
-  (define py-iadd (augmented-op/numbers+strings '__add__ #:num + #:str string-append))
-  (define py-isub (augmented-op/numbers '__sub__ #:num -))
-  (define py-imul (augmented-op/numbers '__mul__ #:num *))
-  (define py-idiv (augmented-op/numbers '__div__ #:num number-division))
-  (define py-ifloordiv (augmented-op/numbers '__floordiv__ #:num (compose floor /)))
-  (define py-imod (augmented-op/numbers '__mod__ #:num py-number-modulo))
-  (define py-ipow (augmented-op/numbers '__pow__ #:num expt))                             ;; /!\ optional argument: modulo
-  (define py-ilshift (augmented-op/numbers '__lshift__ #:num py-shift-left))
-  (define py-irshift (augmented-op/numbers '__rshift__ #:num py-shift-right))
-  (define py-ibwand (augmented-op/numbers '__and__ #:num bitwise-and))
-  (define py-ibwor (augmented-op/numbers '__or__ #:num bitwise-ior))
-  (define py-ibwxor (augmented-op/numbers '__xor__ #:num bitwise-xor))
+  (define-syntax (augmented-op/numbers+strings stx)
+    (syntax-case stx ()
+      [(_ method-name #:num num-dispatch-op
+                      #:str str-dispatch-op)
+       (with-syntax ([incremented-name (datum->syntax stx (prefix-i (syntax->datum #'method-name)))])
+         #'(lambda (x y)
+             (cond
+               [(and (number? x) (number? y)) (num-dispatch-op x y)]
+               [(and (string? x) (string? y)) (str-dispatch-op x y)]
+               [else (augmented-op-method-call x (quote method-name) (quote incremented-name) y)])))]))
   
   
+  (define py-iadd (augmented-op/numbers+strings __add__ #:num + #:str string-append))
+  (define py-isub (augmented-op/numbers __sub__ #:num -))
+  (define py-imul (augmented-op/numbers __mul__ #:num *))
+  (define py-idiv (augmented-op/numbers __div__ #:num number-division))
+  (define py-ifloordiv (augmented-op/numbers __floordiv__ #:num (compose floor /)))
+  (define py-imod (augmented-op/numbers __mod__ #:num py-number-modulo))
+  (define py-ipow (augmented-op/numbers __pow__ #:num expt))                             ;; /!\ optional argument: modulo
+  (define py-ilshift (augmented-op/numbers __lshift__ #:num py-shift-left))
+  (define py-irshift (augmented-op/numbers __rshift__ #:num py-shift-right))
+  (define py-ibwand (augmented-op/numbers __and__ #:num bitwise-and))
+  (define py-ibwor (augmented-op/numbers __or__ #:num bitwise-ior))
+  (define py-ibwxor (augmented-op/numbers __xor__ #:num bitwise-xor))
   
-  (define (unary-op method-name)
-    (lambda (x)
-      (py-method-call x method-name)))
   
-  (define py-unary-plus (unary-op '__pos__))
-  (define py-unary-minus (unary-op '__neg__))
+  
+  (define-syntax (unary-op stx)
+    (syntax-case stx ()
+      [(_ method-name)
+       #'(lambda (x)
+           (py-method-call x method-name))]))
+  
+  (define-syntax (unary-op/numbers stx)
+    (syntax-case stx ()
+      [(_ method-name #:num num-dispatch-op)
+       #'(lambda (x)
+           (cond
+             [(number? x) (num-dispatch-op x)]
+             [else (py-method-call x method-name)]))]))
+  
+  (define py-unary-plus (unary-op/numbers '__pos__ #:num +))
+  (define py-unary-minus (unary-op/numbers '__neg__ #:num -))
   (define py-bwinvert (unary-op '__invert__))
   
   

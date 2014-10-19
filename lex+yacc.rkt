@@ -703,7 +703,8 @@
              ((NEWLINE INDENT stmt_list_plus DEDENT)
               (instantiate suite% ((reverse $3)) (start-pos $1-start-pos) (end-pos $4-end-pos))))
       (stmt_list_plus ((stmt) $1)
-                      ((stmt_list_plus stmt) (append $2 $1)))
+                      ((stmt_list_plus stmt) (append $2 $1)))      
+      
       (test ((or_test) $1)
             [(or_test if or_test else test)
              (make-object conditional-expr% $1 $3 $5 $1-start-pos $5-end-pos)]
@@ -841,8 +842,7 @@
       (target_tuple_or_expr ((target_tuple) $1)
                             ((expr) $1))
       (target_tuple ((exprlist) (make-object tuple% $1 $1-start-pos $1-end-pos)))
-      (testlist_safe ((test) (list $1))
-                     ((test |,| testlist) (cons $1 $3)))
+      
       (dictmaker ((test : test) `((,$1 ,$3)))
                  ((test : test |,|) `((,$1 ,$3)))
                  ((test : test |,| dictmaker) (cons `(,$1 ,$3) $5)))
@@ -862,6 +862,26 @@
                 ((ident = test) `(key ,$1 ,$3)))
       (generator-sole-arg [(test list_for)
                            (list `(pos ,(make-object for-generator% $1 $2 $1-start-pos $2-end-pos)))])
+      
+      ;; backwards compatibility  between conditional expressions and list comprehensions      
+      ;     testlist_safe: old_test [(',' old_test)+ [',']]
+      ;     old_test: or_test | old_lambdef
+      ;     old_lambdef: 'lambda' [varargslist] ':' old_test
+      (testlist_safe ((old_test) (list $1))
+                     ((old_test |,| testlist_safe_plus) (cons $1 $3)))
+      (testlist_safe_plus ((old_test |,| old_test) (list $1 $3))
+                          ((old_test |,| old_test |,|) (list $1 $3))
+                          ((old_test |,| testlist_safe_plus) (cons $1 $3)))
+      (old_test [(or_test) $1]
+                [(old_lambdef) $1])
+      (old_lambdef ((lambda varargslist : old_test)
+                    (make-object lambda% 
+                      (make-object parameters% $2 $2-start-pos $2-end-pos) $4 $1-start-pos $4-end-pos))
+                   ((lambda : old_test)
+                    (make-object lambda%
+                      (make-object parameters% null $2-start-pos $2-end-pos) $3 $1-start-pos $3-end-pos)))
+      
+      
       (list_iter ((list_for) $1)
                  ((list_if) $1))
       (list_for ((for target_tuple_or_expr in testlist_safe)

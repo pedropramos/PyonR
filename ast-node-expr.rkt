@@ -719,6 +719,33 @@
       (super-instantiate ())))
   
   
+  (define conditional-expr%
+    (class expression%
+      
+      ;; body: (is-a?/c expression%)
+      ;; test: (is-a?/c expression%)
+      ;; else: (is-a?/c expression%)
+      (init-field body test else)
+      
+      (define/override (set-bindings! enclosing-scope)
+        (send body set-bindings! enclosing-scope)
+        (send test set-bindings! enclosing-scope)
+        (send else set-bindings! enclosing-scope))
+      
+      (define/override (to-description)
+        `(conditional-expr% ,body ,test, else))
+      
+      (inherit ->orig-so)
+      (define/override (to-racket)
+        (->orig-so `(if (py-truth ,(send test to-racket))
+                        ,(send body to-racket)
+                        ,(send else to-racket))))
+        
+      (super-instantiate ())))
+      
+      
+      
+  
   ;; 5.10
   (define lambda%
     (bindings-mixin

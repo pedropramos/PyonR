@@ -705,6 +705,8 @@
       (stmt_list_plus ((stmt) $1)
                       ((stmt_list_plus stmt) (append $2 $1)))
       (test ((or_test) $1)
+            [(or_test if or_test else test)
+             (make-object conditional-expr% $1 $3 $5 $1-start-pos $5-end-pos)]
             ((lambdef) $1))
       (or_test ((and_test) $1)
                ((or_test or and_test) 

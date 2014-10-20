@@ -223,7 +223,8 @@
      ;; misc
      [(eof) (values lexeme 'eof #f #f #f)]
      [(special) (color-token 'error)]
-     [(special-comment) (color-token 'error)]))
+     [(special-comment) (color-token 'error)]
+     [any-char (color-token 'error)]))
   
   (define-syntax (color-token stx)
     (syntax-case stx ()

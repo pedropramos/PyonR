@@ -80,7 +80,7 @@
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
-  (define (cpointer-id x) (cast x _pointer _long))
+  (define (cpointer-id x) (cast x _pointer _Py_ssize_t))
   
   (define _void* (_cpointer 'void))
   (define _FILE* (_cpointer 'FILE))
@@ -89,7 +89,9 @@
   (define _PyObject* (_cpointer/null 'PyObject))
   (define _PyObject** (_cpointer 'PyObject*))
   (define _PyTypeObject* (_cpointer 'PyTypeObject))
-  (define _Py_ssize_t _long)
+  (define _Py_ssize_t (case (system-type 'word)
+                        [(4) _int32]
+                        [(8) _int64]))
   
   ; FILE* functions
   (ffi-c-lang FILE* fopen (string string))
@@ -230,7 +232,8 @@
   (ffi PyObject* PyImport_Import (PyObject*))
   
   ;; Types
-  (define (PyType_Dict type) (ptr-ref (ptr-add type 132) _PyObject*)) ;; dirty hack
+  (define (PyType_Dict type)
+    (ptr-ref (ptr-add type (* 33 (ctype-sizeof _pointer))) _PyObject*)) ;; dirty hack
   
   ;; Exceptions
 ;  (ffi void PyErr_PrintEx (int))

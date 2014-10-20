@@ -369,14 +369,23 @@
                ;; ignore special objects such as images
                [(special) (return-without-pos (lex-token input-port))]
 
-               ((eof)
+               [(eof)
                 (cond
                   (reached-eof 'EOF)
                   (else
                    (set! reached-eof #t)
                    (set! line-start #t)
                    (set! last-pos end-pos)
-                   'NEWLINE)))))
+                   'NEWLINE))]
+               
+               [any-char
+                (raise-read-error
+                 (format "invalid character '~a'" lexeme)
+                 (file-path)
+                 (position-line start-pos)
+                 (position-col start-pos)
+                 (position-offset start-pos)
+                 (- (position-offset end-pos) (position-offset start-pos)))]))
                  
              ;; Return the number of entries in l before n is reached and set the stack to
              ;; be the rest of l (after n)
@@ -435,8 +444,8 @@
   (define (err token-ok token-name token-value src-start src-end)
     (raise-read-error
      (if token-ok
-         (format "parse error with token: ~a, value: ~a" token-name token-value)
-         (format "unrecognized token: ~a, value: ~a" token-name token-value))
+         (format "invalid or incomplete syntax")
+         (format "unrecognized token ~a (value: ~a)" token-name token-value))
      (file-path)
      (position-line src-start)
      (position-col src-start)

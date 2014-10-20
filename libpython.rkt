@@ -90,8 +90,8 @@
   (define _PyObject** (_cpointer 'PyObject*))
   (define _PyTypeObject* (_cpointer 'PyTypeObject))
   (define _Py_ssize_t (case (system-type 'word)
-                        [(4) _int32]
-                        [(8) _int64]))
+                        [(32) _int32]
+                        [(64) _int64]))
   
   ; FILE* functions
   (ffi-c-lang FILE* fopen (string string))

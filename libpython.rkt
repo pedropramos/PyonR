@@ -25,10 +25,11 @@
   
   (define path-to-others-lib
     (and path-to-cpython-lib
-         (let ([file-name (case (system-type 'os)
-                            [(windows) "others.dll"]
-                            [(unix) "others.so"])])
-           (collection-file-path (build-path "c" file-name) "python"))))
+         (let ([file-suffix (number->string (system-type 'word))]
+               [file-ext (case (system-type 'os)
+                            [(windows) ".dll"]
+                            [(unix macosx) ".so"])])
+           (collection-file-path (build-path "c" (string-append "others" file-suffix file-ext)) "python"))))
     
   (define-ffi-definer define-function (ffi-lib path-to-cpython-lib)
     #:default-make-fail void)

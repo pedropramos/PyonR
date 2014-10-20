@@ -55,12 +55,14 @@
       
   
   
-  (define-for-syntax python-not-found-msg
-    "The cpyimport statement is disabled, because PyonR could not find Python 2.7 installed on your system.")
+  (define-for-syntax (raise-cpyimport-error stx)
+    (raise-syntax-error 'cpyimport
+                        "this statement is disabled because PyonR could not find Python 2.7 installed on your system."
+                        stx))
   
   (define-syntax (cpy-import stx)
     (if (not path-to-cpython-lib)
-        (raise-syntax-error 'python-not-found python-not-found-msg)
+        (raise-cpyimport-error stx)
         (syntax-case stx (as)
           [(_ module-name as id)
            (begin
@@ -71,7 +73,7 @@
   
   (define-syntax (cpy-from stx)
     (if (not path-to-cpython-lib)
-        (raise-syntax-error 'python-not-found python-not-found-msg)
+        (raise-cpyimport-error stx)
         (syntax-case stx (import as)
           [(_ module-name import ((orig-name as bind-id) ...))
            (begin
@@ -89,7 +91,7 @@
   (require (for-syntax (only-in "name-mangling.rkt" string->colon-symbol)))
   (define-syntax (cpy-from-import-* stx)
     (if (not path-to-cpython-lib)
-        (raise-syntax-error 'python-not-found python-not-found-msg)
+        (raise-cpyimport-error stx)
         (syntax-case stx ()
           [(_ module-name)
            (begin

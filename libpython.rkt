@@ -32,11 +32,15 @@
            (collection-file-path (build-path "c" (string-append "others" file-suffix file-ext)) "python"))))
     
   (define-ffi-definer define-function (ffi-lib path-to-cpython-lib)
-    #:default-make-fail void)
+    #:default-make-fail void-if-not-available)
   (define-ffi-definer define-others (ffi-lib path-to-others-lib)
-    #:default-make-fail void)
+    #:default-make-fail void-if-not-available)
   (define-ffi-definer define-c-lang (ffi-lib #f)
-    #:default-make-fail void)
+    #:default-make-fail void-if-not-available)
+  
+  (define (void-if-not-available id)
+    (lambda () void))
+    
   
   
   (define-for-syntax (underscore stx)

@@ -226,6 +226,7 @@
   (require (only-in srfi/13 string-contains))
   (define (racket-exception-type x)
     (cond
+      [(exn:fail:syntax? x) py-SyntaxError]
       [(exn:fail:contract:divide-by-zero? x) py-ZeroDivisionError]
       [(and (exn:fail:contract? x)
             (string-contains (exn-message x) "index is out of range")) py-IndexError]

@@ -603,12 +603,13 @@
   (provide (all-from-out "name-mangling.rkt"))
   
   
+  (require "paths.rkt")
+  (require (for-syntax "paths.rkt"))
   
   (define PATH
-    (let* ([path-to-PATH (collection-file-path (build-path "lib" "PATH") "python")]
-           [file (open-input-file path-to-PATH)])
+    (let* ([file (open-input-file path-to-PATH)])
       (list->py-list
-       (append (list "." (path->string (collection-file-path (build-path "lib") "python")))
+       (append (list "." path-to-lib)
                (map string-trim
                     (port->list read-line file))))))
   
@@ -628,9 +629,8 @@
   (require (for-syntax racket/port
                        racket/string))
   (define-for-syntax (module-name->module-path/compile-time name)
-    (let* ([path-to-PATH (collection-file-path (build-path "lib" "PATH") "python")]
-           [file (open-input-file path-to-PATH)])
-      (let loop ([dirs (append (list "." (path->string (collection-file-path (build-path "lib") "python")))
+    (let* ([file (open-input-file path-to-PATH)])
+      (let loop ([dirs (append (list "." path-to-lib)
                                (map string-trim (port->list read-line file)))])
         (if (empty? dirs)
           (raise-syntax-error 'ImportError (format "No module named ~a" name))

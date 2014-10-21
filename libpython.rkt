@@ -3,6 +3,7 @@
   (require ffi/unsafe
            ffi/unsafe/define
            ffi/unsafe/alloc
+           "paths.rkt"
            (for-syntax racket/syntax))
   
   (provide (except-out (all-defined-out)
@@ -26,10 +27,8 @@
   (define path-to-others-lib
     (and path-to-cpython-lib
          (let ([file-suffix (number->string (system-type 'word))]
-               [file-ext (case (system-type 'os)
-                            [(windows) ".dll"]
-                            [(unix macosx) ".so"])])
-           (collection-file-path (build-path "c" (string-append "others" file-suffix file-ext)) "python"))))
+               [file-ext (bytes->string/locale (system-type 'so-suffix))])
+           (simplify-path (build-path python-root "c" (string-append "others" file-suffix file-ext))))))
     
   (define-ffi-definer define-function (ffi-lib path-to-cpython-lib)
     #:default-make-fail void-if-not-available)

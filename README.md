@@ -5,7 +5,7 @@ PyonR (pronounced "Pioneer") is an implementation of the Python programming lang
 
 ### Installation:
 
-Before you install PyonR, you will need to have Racket v5.92 or above (download it from http://www.racket-lang.org/) and optionally Python 2.7.x (download it from https://www.python.org/).
+Before you install PyonR, you will need to have Racket v6.01 or above (download it from http://www.racket-lang.org/) and optionally Python 2.7.x (download it from https://www.python.org/).
 
 You can install PyonR using DrRacket's Install Package dialog box with `git://github.com/pedropramos/PyonR` as the package source. Make sure you change the package's name to `python`.
 

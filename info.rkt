@@ -1,3 +1,3 @@
 #lang info
-(define collection 'multi)
-(define compile-omit-paths (list "python/examples" "python/test"))
+(define collection "python")
+(define compile-omit-paths (list "examples" "test"))

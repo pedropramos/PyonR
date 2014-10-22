@@ -22,7 +22,8 @@
        (let ([paths (list "/usr/lib/libpython2.7.so"
                           "/usr/lib/python2.7/config/libpython2.7.so")])
          (for/or ([path paths])
-           (and (file-exists? path) path)))]))
+           (and (file-exists? path) path)))]
+      [(macosx) #f]))
   
   (define path-to-others-lib
     (and path-to-cpython-lib

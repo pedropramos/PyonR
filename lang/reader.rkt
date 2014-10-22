@@ -22,6 +22,7 @@ python/lang/python
 (provide python-read
          python-read-syntax
          python-read-syntax-repl
+         python-get-info
          ready-to-submit?)
 
 

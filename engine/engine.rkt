@@ -103,7 +103,7 @@
       (or (for/or ([candidate (in-vector mro)])
             (hash-ref (type_obj-dict candidate) attribute #f)))))
   
-  (define-syntax-rule (py-method-call instance method . args)
+  (define-syntax-rule (mro-method-call instance method . args)
     ((mro-find instance method) instance . args))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

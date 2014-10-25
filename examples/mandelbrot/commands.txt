@@ -1,9 +1,0 @@
-python mandelbrot.py
-
-racket mandelbrot.rkt
-
-(time
-   (py-print
-    (py-call python:mandelbrot
-             (py-integer 1000000)
-             (py-complex .2+.3i))))

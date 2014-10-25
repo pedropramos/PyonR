@@ -648,22 +648,22 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   (define (py-len obj)  ;; optimize for lists
-    (py-method-call obj '__len__))
+    (mro-method-call obj '__len__))
   
   (define (py-get-index obj index)
     (cond
       [(list_obj? obj) (py-list-getitem obj index)]
-      [else (py-method-call obj '__getitem__ index)]))
+      [else (mro-method-call obj '__getitem__ index)]))
   
   (define (py-set-index! obj index item)
     (cond
       [(list_obj? obj) (py-list-setitem! obj index item)]
-      [else (py-method-call obj '__setitem__ index item)]))
+      [else (mro-method-call obj '__setitem__ index item)]))
   
   (define (py-get-slice obj i j)
-    (py-method-call obj '__getslice__ i j))
+    (mro-method-call obj '__getslice__ i j))
   
   (define (py-set-slice! obj i j seq)
-    (py-method-call obj '__setslice__ i j seq))
+    (mro-method-call obj '__setslice__ i j seq))
   
   )

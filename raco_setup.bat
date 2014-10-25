@@ -1,2 +1,2 @@
-raco setup
+raco setup python
 pause

@@ -22,7 +22,7 @@
         ""
         (let ([str (mro-lookup (first args) '__str__)])
           (or (and str (str (first args)))
-              (py-method-call (first args) '__repr__)))))
+              (mro-method-call (first args) '__repr__)))))
   
   (define (py-string-replace str old new [count -1])
     (if (< count 0)

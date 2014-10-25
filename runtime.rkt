@@ -115,9 +115,9 @@
    
    
   (define (binary-op-method-call x method-name reversed-name y)
-    (let ([candidate-result (py-method-call x method-name y)])
+    (let ([candidate-result (mro-method-call x method-name y)])
       (if (eq? candidate-result py-NotImplemented)
-          (py-method-call y reversed-name x)
+          (mro-method-call y reversed-name x)
           candidate-result)))
   
   (define (augmented-op-method-call x method-name incremented-name y)
@@ -242,7 +242,7 @@
     (syntax-case stx ()
       [(_ method-name)
        #'(lambda (x)
-           (py-method-call x method-name))]))
+           (mro-method-call x method-name))]))
   
   (define-syntax (unary-op/numbers stx)
     (syntax-case stx ()
@@ -250,7 +250,7 @@
        #'(lambda (x)
            (cond
              [(number? x) (num-dispatch-op x)]
-             [else (py-method-call x method-name)]))]))
+             [else (mro-method-call x method-name)]))]))
   
   (define py-unary-plus (unary-op/numbers '__pos__ #:num +))
   (define py-unary-minus (unary-op/numbers '__neg__ #:num -))
@@ -260,7 +260,7 @@
 
   
   (define (:abs x)
-    (py-method-call x '__abs__))
+    (mro-method-call x '__abs__))
   
   
   
@@ -362,10 +362,14 @@
   
   
   (define (py-get-attr obj attribute)
-    (py-method-call obj '__getattribute__ attribute))
+    (mro-method-call obj '__getattribute__ attribute))
   
   (define (py-set-attr! obj attribute item)
-    (py-method-call obj '__setattr__ attribute item))
+    (mro-method-call obj '__setattr__ attribute item))
+  
+  
+  (define-syntax-rule (py-method-call obj attribute args ...)
+    ((py-get-attr obj attribute) args ...))
 
   
   

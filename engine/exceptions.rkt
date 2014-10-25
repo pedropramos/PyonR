@@ -137,23 +137,27 @@
                                             py-exception-set-message!))))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   
+  (define (error-format typ msg)
+    (if (zero? (string-length (string-trim msg)))
+        (format "~a" typ)
+        (format "~a: ~a" typ msg)))
   
   (define python-error-display-handler
     (let ([oedh (error-display-handler)]) ; original-error-display-handler
       (lambda (msg e)
         (cond
           [(exception_obj? e)
-           ;(displayln (continuation-mark-set->context (exception_obj-continuation-marks e)))
-           (oedh (format "~a: ~a"
-                         (type_obj-name (python-object-type e))
-                         (print-repr (exception_obj-message e)))
+           (oedh (error-format
+                  (type_obj-name (python-object-type e))
+                  (print-repr (exception_obj-message e)))
                  (exn:fail (print-repr (exception_obj-message e))
                            (exception_obj-continuation-marks e)))]
           
           [(exn? e)
-           (oedh (format "~a: ~a"
-                         (type_obj-name (racket-exception-type e))
-                         (exn-message e))
+           (oedh (error-format
+                  (type_obj-name (racket-exception-type e))
+                  (exn-message e))
                  (exn:fail (exn-message e)
                            (exn-continuation-marks e)))]
           

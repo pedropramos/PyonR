@@ -229,6 +229,16 @@
     (make-py-module (str-from-cpy (PyObject_GetAttrString x "__name__"))
                     (dict-from-cpy (PyObject_GetAttrString x "__dict__"))))
   
+  (define (exception-from-cpy x)
+    (exception_obj (cpy->racket (PyObject_Type x))
+                   (let ([args (PyObject_GetAttrString x "args")])
+                     (if args (cpy->racket args) (make-py-tuple)))
+                   (let ([message (PyObject_GetAttrString x "message")])
+                     (if message
+                         (cpy->racket message)
+                         (PyString_AsString (PyObject_Repr x))))
+                   (current-continuation-marks)))
+  
               
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
@@ -245,8 +255,8 @@
                                   (list->cpy-tuple (map racket->cpy args)))])
         (if ffi_call_result
             (cpy->racket ffi_call_result)
-            (let ([cpy-exception (second (PyErr_Fetch))])
-              (raise (cpy->racket cpy-exception)))))))
+            (let ([cpy-exception (second (apply PyErr_NormalizeException (PyErr_Fetch)))])
+              (raise (exception-from-cpy cpy-exception)))))))
   
   
   (define (proxy-obj-from-cpy x)

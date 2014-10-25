@@ -276,9 +276,17 @@
 ;  (ffi PyObject* PyErr_NewExceptionWithDoc (string string PyObject* PyObject*))
 ;  (ffi void PyErr_WriteUnraisable (PyObject*))
   
-  (define-function PyErr_Fetch (_fun (a : (_ptr o _PyObject*))
-                                     (b : (_ptr o _PyObject*))
-                                     (c : (_ptr o _PyObject*)) -> _void -> (list a b c)))
+  (define-function PyErr_Fetch
+    (_fun (a : (_ptr o _PyObject*))
+          (b : (_ptr o _PyObject*))
+          (c : (_ptr o _PyObject*))
+          -> _void -> (list a b c)))
+  
+  (define-function PyErr_NormalizeException
+    (_fun (a : (_ptr io _PyObject*))
+          (b : (_ptr io _PyObject*))
+          (c : (_ptr io _PyObject*))
+          -> _void -> (list a b c)))
   
   
   

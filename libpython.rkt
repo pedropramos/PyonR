@@ -11,19 +11,18 @@
                        ffi ffi-others ffi-c-lang))
   
   
+  (define (find-first-path . paths)
+    (for/or ([path paths])
+      (and (file-exists? path) path)))
+  
   (define path-to-cpython-lib
     (case (system-type 'os)
-      [(windows)
-       (let ([paths (list "C:/Windows/SysWOW64/python27.dll"
-                          "C:/Windows/System32/python27.dll")])
-         (for/or ([path paths])
-           (and (file-exists? path) path)))]
-      [(unix)
-       (let ([paths (list "/usr/lib/libpython2.7.so"
-                          "/usr/lib/python2.7/config/libpython2.7.so")])
-         (for/or ([path paths])
-           (and (file-exists? path) path)))]
-      [(macosx) #f]))
+      [(windows) (find-first-path "C:/Windows/SysWOW64/python27.dll"
+                                  "C:/Windows/System32/python27.dll")]
+      [(unix) (find-first-path "/usr/lib/libpython2.7.so"
+                               "/usr/lib/python2.7/config/libpython2.7.so")]
+      [(macosx) (find-first-path "/usr/lib/libpython2.7.dylib"
+                                 "/usr/local/lib/libpython2.7.dylib")]))
   
   (define path-to-others-lib
     (and path-to-cpython-lib

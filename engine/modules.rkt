@@ -26,7 +26,7 @@
                      '__repr__ py-module-repr
                      '__setattr__ py-instance-setattribute)))
   
-  (define (make-py-module name [contents (make-hasheq)])
+  (define (make-py-module name [contents (make-hash)])
     (module_obj py-module contents name))
   
   
@@ -40,7 +40,7 @@
           (unless (and (eq? (string-ref name 0) #\_)
                        (not mangled?))
             (py-module-set-entry! module-obj
-                                  (string->symbol (if mangled? (mangle-name name) name))
+                                  (if mangled? (mangle-name name) name)
                                   (dynamic-require module-spec id)))))
       module-obj))
   

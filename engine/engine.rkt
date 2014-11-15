@@ -116,17 +116,11 @@
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
-  (define (symbol-hash->string-hash symhash)
-    (let ([strhash (make-hash)])
-      (for ([(k v) (in-hash symhash)])
-        (hash-set! strhash (symbol->string k) v))
-      strhash))
-  
-  (define (string-hash->symbol-hash strhash)
-    (let ([symhash (make-hasheq)])
-      (for ([(k v) (in-dict strhash)])
-        (hash-set! symhash (string->symbol k) v))
-      symhash))
+  (define (dict->hash d)
+    (let ([h (make-hash)])
+      (for ([(k v) (in-dict d)])
+        (hash-set! h k v))
+      h))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
@@ -164,10 +158,9 @@
     (let ([dict (make-hasheq)])
       (hash-set! dict '__module__ module)
       (hash-set! dict '__doc__ doc)
-      (hash-set! dict '__dict__ (make-getset (lambda (self)
-                                               (symbol-hash->string-hash (instance_obj-attributes self)))
-                                             (lambda (self value)
-                                               (set-instance_obj-attributes! self (string-hash->symbol-hash value)))))
+      (hash-set! dict '__dict__ (make-getset instance_obj-attributes
+                                             (lambda (self d)
+                                               (set-instance_obj-attributes! self (dict->hash d)))))
       (hash-set! dict '__new__ py-object-new-instance)
       (hash-set! dict '__getattribute__ py-instance-getattribute)
       (hash-set! dict '__setattr__ py-instance-setattribute)
@@ -332,12 +325,11 @@
       
   
   (define (py-instance-getattribute obj attr-name)
-    (let* ([attr-sym (string->symbol attr-name)]
-           [attr (mro-lookup obj attr-sym)])
+    (let ([attr (mro-lookup obj (string->symbol attr-name))])
       (if (not attr)
           
           ;; if attributte is not found, look for it on the object's dictionary or raise AttributeError
-          (let ([obj-attr (hash-ref (instance_obj-attributes obj) attr-sym #f)])
+          (let ([obj-attr (hash-ref (instance_obj-attributes obj) attr-name #f)])
             (cond
               [obj-attr obj-attr]
               [else (raise (make-py-exception py-AttributeError
@@ -351,7 +343,7 @@
                 ;; if attribute is a descriptor, use the getter
                 (getter attr obj (type obj))
                 ;; else, look in object's dictionary, use getter if descriptor, or return attribute
-                (let ([obj-attr (hash-ref (instance_obj-attributes obj) attr-sym #f)])
+                (let ([obj-attr (hash-ref (instance_obj-attributes obj) attr-name #f)])
                   (cond
                     [obj-attr obj-attr]
                     [getter (getter attr obj (type obj))]
@@ -377,11 +369,10 @@
   
   
   (define (py-instance-setattribute obj attr-name value)
-    (let* ([attr-sym (string->symbol attr-name)]
-           [attr (mro-lookup obj attr-sym)])
+    (let ([attr (mro-lookup obj (string->symbol attr-name))])
       (if (not attr)
           ;; if attr not found, we must set it on object dictionary
-          (hash-set! (instance_obj-attributes obj) attr-sym value)
+          (hash-set! (instance_obj-attributes obj) attr-name value)
           (let ([setter (type_obj-setter (type attr))])
             (if setter
                 ;; if attr is a data descriptor, use the setter
@@ -418,7 +409,7 @@
     (if (and (> (length args) 0)
              (eq? (mro-type-lookup typ '__init__) py-object-init))
         (raise (make-py-exception py-TypeError "object.__new__() takes no parameters"))
-        (instance_obj typ (make-hasheq))))
+        (instance_obj typ (make-hash))))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
@@ -427,7 +418,7 @@
     (slots))
   
   (define (py-object-new-instance/no-dict typ . args)
-    (slotted-instance_obj typ #f (make-hasheq)))
+    (slotted-instance_obj typ #f (make-hash)))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   

@@ -202,14 +202,8 @@
   
   
   
-;  (define (convert-dict-from-cpy x)
-;    (let ([type (PyString_AsString
-;                 (PyObject_GetAttrString
-;                  (PyObject_Type x) "__name__"))])
-;      (case type
-  
   ;; used only for holding attribute/method names as keys (implemented as symbols)
-  (define (dict-from-cpy x)
+  (define (symdict-from-cpy x)
     (let* ([id-x (cpointer-id x)]
            [cached (hash-ref (recursion-cache) id-x #f)])
       (or cached
@@ -223,11 +217,27 @@
                              (string->symbol (cpy->racket cpy-key))
                              (cpy->racket (PyDict_GetItem x cpy-key)))))
               result)))))
+  
+  ;; used only for holding attribute/method names as keys (implemented as strings)
+  (define (strdict-from-cpy x)
+    (let* ([id-x (cpointer-id x)]
+           [cached (hash-ref (recursion-cache) id-x #f)])
+      (or cached
+          (let* ([cpy-keys (PyDict_Keys x)]
+                 [size (PyList_Size cpy-keys)]
+                 [result (make-hash)])
+            (parameterize ([recursion-cache (hash-set (recursion-cache) id-x result)])
+              (for ([i (in-range size)])
+                (let ([cpy-key (PyList_GetItem cpy-keys i)])
+                  (hash-set! result
+                             (cpy->racket cpy-key)
+                             (cpy->racket (PyDict_GetItem x cpy-key)))))
+              result)))))
       
   
   (define (module-from-cpy x)
     (make-py-module (str-from-cpy (PyObject_GetAttrString x "__name__"))
-                    (dict-from-cpy (PyObject_GetAttrString x "__dict__"))))
+                    (strdict-from-cpy (PyObject_GetAttrString x "__dict__"))))
   
   (define (exception-from-cpy x)
     (exception_obj (cpy->racket (PyObject_Type x))
@@ -284,12 +294,12 @@
   (define-syntax-rule (fill-proxy-type! (id ffi-obj))
     (begin
       (set-python-object-type! id py-type)
-      (set-type_obj-name!   id (str-from-cpy   (PyObject_GetAttrString ffi-obj "__name__")))
-      (set-type_obj-module! id (str-from-cpy   (PyObject_GetAttrString ffi-obj "__module__")))
-      (set-type_obj-bases!  id (tuple-from-cpy (PyObject_GetAttrString ffi-obj "__bases__")))
-      (set-type_obj-doc!    id (cpy->racket    (PyObject_GetAttrString ffi-obj "__doc__")))
-      (set-type_obj-dict!   id (dict-from-cpy  (PyType_Dict ffi-obj)))
-      (set-type_obj-mro!    id (tuple-from-cpy (PyObject_GetAttrString ffi-obj "__mro__")))
+      (set-type_obj-name!   id (str-from-cpy     (PyObject_GetAttrString ffi-obj "__name__")))
+      (set-type_obj-module! id (str-from-cpy     (PyObject_GetAttrString ffi-obj "__module__")))
+      (set-type_obj-bases!  id (tuple-from-cpy   (PyObject_GetAttrString ffi-obj "__bases__")))
+      (set-type_obj-doc!    id (cpy->racket      (PyObject_GetAttrString ffi-obj "__doc__")))
+      (set-type_obj-dict!   id (symdict-from-cpy (PyType_Dict ffi-obj)))
+      (set-type_obj-mro!    id (tuple-from-cpy   (PyObject_GetAttrString ffi-obj "__mro__")))
       
       ;(set-type_obj-getter! id (let ([getter (PyObject_GetAttrString ffi-obj "__get__")])
       ;                           (if getter (cpy->racket getter) getter)))

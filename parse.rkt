@@ -18,10 +18,11 @@
   
   (define (init-bindings ast-l)
     (let ([scope (make-object module-scope%)])
-      (for-each (lambda (a) (send a set-bindings! scope))
-                ast-l)
-      (for-each (lambda (a) (send a check-break/cont #f))
-                ast-l)
-      ast-l))
+      (for ([a ast-l])
+        (send a set-bindings! scope))
+      (for ([a ast-l])
+        (send a check-break/cont #f))
+      
+      (cons ast-l scope)))
   
   )

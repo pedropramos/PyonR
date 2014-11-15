@@ -873,6 +873,7 @@
       (define/public (set-can-cont?) (set! can-cont? #t))
       
       (define scope #f)
+      (define/public (get-scope) scope)
       
       (define/override (set-bindings! enclosing-scope)
         (set! scope enclosing-scope)

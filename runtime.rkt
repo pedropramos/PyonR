@@ -733,22 +733,22 @@
     (let* ([ns (if (and (void? globals) (void? locals))
                    (namespace-for-eval)
                    (build-namespace globals locals))]
-           [ast (read-python-port (open-input-string str) "eval")]
+           [ast (car (read-python-port (open-input-string str) "eval"))]
            [expr-stmt (if (or (not (= (length ast) 1))
                               (not (is-a? (first ast) expr-stmt%)))
                           (exn-raise py-SyntaxError "invalid syntax: not an expression")
                           (first ast))]
            [expr (get-field expression expr-stmt)]
-           [compiled (compile-python (list expr))]
-           [sexp (syntax->datum (first compiled))])
+           [compiled (compile-expression expr)]
+           [sexp (syntax->datum compiled)])
       (eval sexp ns)))
   
   (define (py-exec str globals locals)
     (let* ([ns (if (and (void? globals) (void? locals))
                    (namespace-for-eval)
                    (build-namespace globals locals))]
-           [ast (read-python-port (open-input-string str) "exec")]
-           [compiled (compile-python ast)]
+           [ast+scope (read-python-port (open-input-string str) "exec")]
+           [compiled (compile-python ast+scope)]
            [sexps (map syntax->datum compiled)]
            [stmt `(begin ,@sexps)])
       (eval stmt ns)))

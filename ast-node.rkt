@@ -21,6 +21,16 @@
   (define (send-to-racket obj . args)
     (apply dynamic-send (append (list obj) args (list 'to-racket))))
   
+  
+  ;; used to compile definitions for bindings on top-level
+  (define (compile-top-definitions scope)
+    (for/list ([id (send scope get-bindings)])
+      (let ([id-stx (send id to-racket)])
+        (datum->syntax id-stx
+                       `(py-assign! ,id-stx undefined)
+                       id-stx
+                       id-stx))))
+  
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   

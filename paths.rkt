@@ -7,3 +7,6 @@
 
 (define path-to-lib (simplify-path (build-path python-root "lib")))
 (define path-to-PATH (simplify-path (build-path path-to-lib "PATH")))
+
+(define path-to-config (simplify-path (build-path python-root "config")))
+(define path-to-CPYIMPORT (simplify-path (build-path path-to-config "CPYIMPORT")))

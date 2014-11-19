@@ -55,57 +55,56 @@
       
   
   
-  (define-for-syntax (raise-cpyimport-error stx)
-    (raise-syntax-error 'cpyimport
-                        "this statement is disabled because PyonR could not find Python 2.7 installed on your system."
-                        stx))
+  (define-for-syntax (check-cpyimport-for-error stx)
+    (cond
+      [(not path-to-cpython-lib)
+       (raise-syntax-error 'cpyimport "The 'cpyimport' statement is not available because PyonR could not find Python 2.7 installed on your system." stx)]
+      [(not cpyimport-enabled)
+       (raise-syntax-error 'cpyimport "The 'cpyimport' statement is disabled.\n  To enable it, require the module 'python/config' from Racket and run (enable-cpyimport!)" stx)]))
   
   (define-syntax (cpy-import stx)
-    (if (not path-to-cpython-lib)
-        (raise-cpyimport-error stx)
-        (syntax-case stx (as)
-          [(_ module-name as id)
-           (begin
-             (Py_Initialize)
-             #'(define id (module-from-cpy
-                           (PyImport_Import
-                            (PyString_FromString module-name)))))])))
+    (check-cpyimport-for-error stx)
+    (syntax-case stx (as)
+      [(_ module-name as id)
+       (begin
+         (Py_Initialize)
+         #'(define id (module-from-cpy
+                       (PyImport_Import
+                        (PyString_FromString module-name)))))]))
   
   (define-syntax (cpy-from stx)
-    (if (not path-to-cpython-lib)
-        (raise-cpyimport-error stx)
-        (syntax-case stx (import as)
-          [(_ module-name import ((orig-name as bind-id) ...))
-           (begin
-             (Py_Initialize)
-             #'(begin
-                 (define bind-id 'undefined)
-                 ...
-                 (let ([cpy-module (PyImport_Import
-                                    (PyString_FromString module-name))])
-                   (set! bind-id (cpy->racket
-                                  (PyObject_GetAttrString cpy-module orig-name)))
-                   ...)))])))
+    (check-cpyimport-for-error stx)
+    (syntax-case stx (import as)
+      [(_ module-name import ((orig-name as bind-id) ...))
+       (begin
+         (Py_Initialize)
+         #'(begin
+             (define bind-id 'undefined)
+             ...
+             (let ([cpy-module (PyImport_Import
+                                (PyString_FromString module-name))])
+               (set! bind-id (cpy->racket
+                              (PyObject_GetAttrString cpy-module orig-name)))
+               ...)))]))
   
   
   (require (for-syntax (only-in "name-mangling.rkt" string->colon-symbol)))
   (define-syntax (cpy-from-import-* stx)
-    (if (not path-to-cpython-lib)
-        (raise-cpyimport-error stx)
-        (syntax-case stx ()
-          [(_ module-name)
-           (begin
-             (Py_Initialize)
-             (let* ([bindings-names (cpy-module-exports (syntax->datum #'module-name))]
-                    [bindings (map string->colon-symbol bindings-names)])
-               #`(begin
-                   (define cpy-module (PyImport_Import (PyString_FromString module-name)))
-                   #,@(for/list ([binding/str bindings-names]
-                                 [binding/sym bindings])
-                        (with-syntax ([id (datum->syntax stx binding/sym)]
-                                      [id-name (datum->syntax stx binding/str)])
-                          #'(define id (cpy->racket
-                                        (PyObject_GetAttrString cpy-module id-name))))))))])))
+    (check-cpyimport-for-error stx)
+    (syntax-case stx ()
+      [(_ module-name)
+       (begin
+         (Py_Initialize)
+         (let* ([bindings-names (cpy-module-exports (syntax->datum #'module-name))]
+                [bindings (map string->colon-symbol bindings-names)])
+           #`(begin
+               (define cpy-module (PyImport_Import (PyString_FromString module-name)))
+               #,@(for/list ([binding/str bindings-names]
+                             [binding/sym bindings])
+                    (with-syntax ([id (datum->syntax stx binding/sym)]
+                                  [id-name (datum->syntax stx binding/str)])
+                      #'(define id (cpy->racket
+                                    (PyObject_GetAttrString cpy-module id-name))))))))]))
   
   (require (for-syntax "libpython.rkt"))
   (define-for-syntax (cpy-module-exports module-name)

@@ -29,10 +29,16 @@
          (let ([file-suffix (number->string (system-type 'word))]
                [file-ext (bytes->string/locale (system-type 'so-suffix))])
            (simplify-path (build-path python-root "c" (string-append "others" file-suffix file-ext))))))
+  
+  (define cpyimport-enabled
+    (let* ([file (open-input-file path-to-CPYIMPORT)]
+           [line (read-line file)])
+      (string=? line "ON")))
+
     
-  (define-ffi-definer define-function (ffi-lib path-to-cpython-lib)
+  (define-ffi-definer define-function (ffi-lib (and cpyimport-enabled path-to-cpython-lib))
     #:default-make-fail void-if-not-available)
-  (define-ffi-definer define-others (ffi-lib path-to-others-lib)
+  (define-ffi-definer define-others (ffi-lib (and cpyimport-enabled path-to-others-lib))
     #:default-make-fail void-if-not-available)
   (define-ffi-definer define-c-lang (ffi-lib #f)
     #:default-make-fail void-if-not-available)

@@ -44,6 +44,11 @@ If you have Python 2.7 installed on your system, you can import its modules usin
 
 For a demonstration, check out the examples at `examples/numpy_arrays` and `examples/datetime`.
 
+UPDATE (18/11/2014):
+Many users have reported issues with CPython's VM during PyonR's installation, therefore the `cpyimport` import must now be manually enabled from Racket after installing PyonR.
+To do so, require the `python/config` module and run `(enable-cpyimport!)`. You only need to do this once.
+If you turn out to have any issues after this, you can disable it by running `(disable-cpyimport!)`.
+
 
 ### Importing modules from Racket:
 

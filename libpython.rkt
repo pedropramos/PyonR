@@ -20,7 +20,8 @@
       [(windows) (find-first-path "C:/Windows/SysWOW64/python27.dll"
                                   "C:/Windows/System32/python27.dll")]
       [(unix) (find-first-path "/usr/lib/libpython2.7.so"
-                               "/usr/lib/python2.7/config/libpython2.7.so")]
+                               "/usr/lib/python2.7/config/libpython2.7.so"
+                               "/usr/lib/python2.7/config-x86_64-linux-gnu/libpython2.7.so")]
       [(macosx) (find-first-path "/usr/lib/libpython2.7.dylib"
                                  "/usr/local/lib/libpython2.7.dylib")]))
   

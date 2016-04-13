@@ -4,7 +4,9 @@
            ffi/unsafe/define
            ffi/unsafe/alloc
            "paths.rkt"
-           (for-syntax racket/syntax))
+           racket/system
+           (for-syntax racket/syntax)
+           (only-in racket/port with-output-to-string))
   
   (provide (except-out (all-defined-out)
                        define-function define-others define-c-lang
@@ -19,9 +21,8 @@
     (case (system-type 'os)
       [(windows) (find-first-path "C:/Windows/SysWOW64/python27.dll"
                                   "C:/Windows/System32/python27.dll")]
-      [(unix) (find-first-path "/usr/lib/libpython2.7.so"
-                               "/usr/lib/python2.7/config/libpython2.7.so"
-                               "/usr/lib/python2.7/config-x86_64-linux-gnu/libpython2.7.so")]
+      [(unix) (find-first-path (car (regexp-split #px"\n" (with-output-to-string
+                                                           (λ () (system "find /usr/lib/ -name libpython2.7.so")))))) ]
       [(macosx) (find-first-path "/usr/lib/libpython2.7.dylib"
                                  "/usr/local/lib/libpython2.7.dylib")]))
   

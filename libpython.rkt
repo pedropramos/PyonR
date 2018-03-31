@@ -36,6 +36,8 @@
            [line (read-line file)])
       (string=? line "ON")))
 
+  (define (void-if-not-available id)
+    (lambda () void))
     
   (define-ffi-definer define-function (ffi-lib (and cpyimport-enabled path-to-cpython-lib))
     #:default-make-fail void-if-not-available)
@@ -44,9 +46,6 @@
   (define-ffi-definer define-c-lang (ffi-lib #f)
     #:default-make-fail void-if-not-available)
   
-  (define (void-if-not-available id)
-    (lambda () void))
-    
   
   
   (define-for-syntax (underscore stx)
